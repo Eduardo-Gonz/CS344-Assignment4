@@ -57,7 +57,7 @@ char *getStr() {
     while(!fgets(tempBuff, MAX_LENGTH, stdin)) {
         temp = calloc(strlen(tempBuff) + 1, sizeof(char));
         strcpy(temp, tempBuff);
-        break;
+	printf("%s", temp);
     }
     return temp;
 }
@@ -66,7 +66,8 @@ void *getInput(void *args) {
     printf("HELLO");
     for(int i = 0; i < MAX_SIZE; i++) {
         char *str = getStr();
-        printf("%s", str);
+        //printf("%s", str);
+	break;
     }
     return NULL;
 }
@@ -95,13 +96,13 @@ int main()
 
     //Create files
     pthread_create(&input_t, NULL, getInput, NULL);
-    // pthread_create(&newlines_t, NULL, filterNewLine, NULL);
-    // pthread_create(&plus_t, NULL, filterPlus, NULL);
-    // pthread_create(&output_t, NULL, writeOutput, NULL);
+    pthread_create(&newlines_t, NULL, filterNewLine, NULL);
+    pthread_create(&plus_t, NULL, filterPlus, NULL);
+    pthread_create(&output_t, NULL, writeOutput, NULL);
     //Wait for the threads to terminate
     pthread_join(input_t, NULL);
-    // pthread_join(newlines_t, NULL);
-    // pthread_join(plus_t, NULL);
-    // pthread_join(output_t, NULL);
+    pthread_join(newlines_t, NULL);
+    pthread_join(plus_t, NULL);
+    pthread_join(output_t, NULL);
     return EXIT_SUCCESS;
 }

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <pthread.h>
 #include <unistd.h>
 
@@ -7,6 +8,8 @@
 #define MAX_SIZE 50
 
 #define MAX_LENGTH 1000
+
+int quit = 0;
 
 /* This code came from the example program from class */
 // Buffer 1, shared resource between input thread and newLine thread
@@ -48,8 +51,27 @@ pthread_mutex_t mutex_3 = PTHREAD_MUTEX_INITIALIZER;
 // Initialize the condition variable for buffer 3
 pthread_cond_t full_3 = PTHREAD_COND_INITIALIZER;
 
+char *getStr() {
+    char tempBuff[1000] = {"\0"};
+    char *temp;
+    while(!fgets(tempBuff, MAX_LENGTH, stdin)) {
+        temp = calloc(strlen(tempBuff) + 1, sizeof(char));
+        strcpy(temp, tempBuff);
+        break;
+    }
+    return temp;
+}
 
 void *getInput(void *args) {
+    printf("HELLO");
+    for(int i = 0; i < MAX_SIZE; i++) {
+        char *str = getStr();
+        printf("%s", str);
+    }
+    return NULL;
+}
+
+void *getUserInput(void *args) {
     return NULL;
 }
 
@@ -69,17 +91,17 @@ void *writeOutput(void *args) {
 
 int main()
 {
-    srand(time(0));
     pthread_t input_t, newlines_t, plus_t, output_t;
-    // Create the threads
+
+    //Create files
     pthread_create(&input_t, NULL, getInput, NULL);
-    pthread_create(&newlines_t, NULL, filterNewLine, NULL);
-    pthread_create(&plus_t, NULL, filterPlus, NULL);
-    pthread_create(&output_t, NULL, writeOutput, NULL);
-    // Wait for the threads to terminate
+    // pthread_create(&newlines_t, NULL, filterNewLine, NULL);
+    // pthread_create(&plus_t, NULL, filterPlus, NULL);
+    // pthread_create(&output_t, NULL, writeOutput, NULL);
+    //Wait for the threads to terminate
     pthread_join(input_t, NULL);
-    pthread_join(newlines_t, NULL);
-    pthread_join(plus_t, NULL);
-    pthread_join(output_t, NULL);
+    // pthread_join(newlines_t, NULL);
+    // pthread_join(plus_t, NULL);
+    // pthread_join(output_t, NULL);
     return EXIT_SUCCESS;
 }

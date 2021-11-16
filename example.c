@@ -196,3 +196,22 @@ int main()
     pthread_join(output_t, NULL);
     return EXIT_SUCCESS;
 }
+
+
+
+// void expandVar(char *cmd) {
+//     char buffer[100] = {"\0"};
+//     char *p = cmd;
+//     pid_t pid = getpid();
+//     char replace [2049];
+//     sprintf(replace, "%d", pid);
+
+//     while ((p = strstr(p, "$$"))) {
+//         strncpy(buffer, cmd, p - cmd);
+//         strcat(buffer, replace);
+//         strcat(buffer, p+strlen("$$"));
+//         strcpy(cmd, buffer);
+//         p++;
+//     }
+  
+// }

@@ -65,7 +65,7 @@ char *getBuff1(){
   while (count_1 == 0)
     // Buffer is empty. Wait for the producer to signal that the buffer has data
     pthread_cond_wait(&full_1, &mutex_1);
-  char *line = calloc(strlen(buffer_1[con_idx_1] + 1), sizeof(char));
+  char *line = calloc(strlen(buffer_1[con_idx_1]), sizeof(char));
   strcpy(line, buffer_1[con_idx_1]);
   // Increment the index from which the item will be picked up
   con_idx_1 += 1;
@@ -90,6 +90,23 @@ void putBuff1(char *str) {
     pthread_mutex_unlock(&mutex_1);
 }
 
+char *getBuff2(){
+  // Lock the mutex before checking if the buffer has data
+  pthread_mutex_lock(&mutex_2);
+  while (count_2 == 0)
+    // Buffer is empty. Wait for the producer to signal that the buffer has data
+    pthread_cond_wait(&full_2, &mutex_2);
+  char *line = calloc(strlen(buffer_2[con_idx_2]), sizeof(char));
+  strcpy(line, buffer_2[con_idx_2]);
+  // Increment the index from which the item will be picked up
+  con_idx_2 += 1;
+  count_2 -= 1;
+  // Unlock the mutex
+  pthread_mutex_unlock(&mutex_2);
+  // Return the item
+  return line;
+}
+
 void putBuff2(char *str){
   // Lock the mutex before putting the item in the buffer
   pthread_mutex_lock(&mutex_2);
@@ -106,8 +123,8 @@ void putBuff2(char *str){
 
 //Testing purposes only
 void printBuff() {
-    for(int i = 0; i < count_2; i++) {
-        printf("%d: %s", i, buffer_2[i]);
+    for(int i = 0; i < count_3; i++) {
+        printf("%d: %s", i, buffer_3[i]);
     }
 }
 
@@ -137,22 +154,50 @@ void replaceNewLine(char *cmd) {
   
 }
 
+void replacePlus(char *cmd) {
+    char buffer[1000] = {"\0"};
+    char *p = cmd;
+    char *carrot = "^";
+    
+    while ((p = strstr(p, "++"))) {
+        strncpy(buffer, cmd, p - cmd);
+        buffer[p - cmd] = '\0';
+        strcat(buffer, carrot);
+        strcat(buffer, p+strlen("++"));
+        strcpy(cmd, buffer);
+        p++;
+    }
+  
+}
+
 
 void *filterNewLine(void *args) {
     char *temp;
-    int i = 0;
     while(1) {
         temp = getBuff1();
-        if(checkSTOP(temp))
+        if(checkSTOP(temp)){
+            putBuff2(temp);
             break;
+        }
         replaceNewLine(temp);
         putBuff2(temp);
     }
-    printBuff();
     return NULL; 
 }
 
 void *filterPlus(void *args) {
+    char *temp;
+    while(1) {
+        temp = getBuff2();
+        if(checkSTOP(temp)){
+            //putBuff3(temp);
+            break;
+        }
+        replacePlus(temp);
+        printf("%s", temp);
+        //putBuff3(temp);
+    }
+    //printBuff();
     return NULL;
 }
 

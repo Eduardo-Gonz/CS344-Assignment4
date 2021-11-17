@@ -51,28 +51,43 @@ pthread_mutex_t mutex_3 = PTHREAD_MUTEX_INITIALIZER;
 // Initialize the condition variable for buffer 3
 pthread_cond_t full_3 = PTHREAD_COND_INITIALIZER;
 
-char *getStr() {
-    char tempBuff[1000] = {"\0"};
-    char *temp;
-    while(!fgets(tempBuff, MAX_LENGTH, stdin)) {
-        temp = calloc(strlen(tempBuff) + 1, sizeof(char));
-        strcpy(temp, tempBuff);
-	printf("%s", temp);
+int checkSTOP(char *str) {
+    if(strcmp(str, "STOP\n") == 0) {
+        quit = 1;
+        return 1;
     }
-    return temp;
+    return 0;
+}
+
+void putBuff1(char *str) {
+    pthread_mutex_lock(&mutex_1);
+
+    // Put the item in the buffer
+    strcpy(buffer_1[prod_idx_1], str);
+    // Increment the index where the next item will be put.
+    prod_idx_1 += 1;
+    count_1 += 1;
+    // Signal to the consumer that the buffer is no longer empty
+    pthread_cond_signal(&full_1);
+
+    pthread_mutex_unlock(&mutex_1);
+}
+
+//Testing purposes only
+void printBuff() {
+    for(int i = 0; i < count_1; i++) {
+        printf("%d: %s", i, buffer_1[i]);
+    }
 }
 
 void *getInput(void *args) {
-    printf("HELLO");
-    for(int i = 0; i < MAX_SIZE; i++) {
-        char *str = getStr();
-        //printf("%s", str);
-	break;
+    char temp[1000] = {"\0"};
+    while(fgets(temp, MAX_LENGTH, stdin) != NULL) {
+        if(checkSTOP(temp))
+            break;
+        putBuff1(temp);
     }
-    return NULL;
-}
-
-void *getUserInput(void *args) {
+    
     return NULL;
 }
 

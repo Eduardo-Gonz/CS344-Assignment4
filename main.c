@@ -59,6 +59,23 @@ int checkSTOP(char *str) {
     return 0;
 }
 
+char *getBuff1(){
+  // Lock the mutex before checking if the buffer has data
+  pthread_mutex_lock(&mutex_1);
+  while (count_1 == 0)
+    // Buffer is empty. Wait for the producer to signal that the buffer has data
+    pthread_cond_wait(&full_1, &mutex_1);
+  char *line = calloc(strlen(buffer_1[con_idx_1] + 1), sizeof(char));
+  strcpy(line, buffer_1[con_idx_1]);
+  // Increment the index from which the item will be picked up
+  con_idx_1 += 1;
+  count_1 -= 1;
+  // Unlock the mutex
+  pthread_mutex_unlock(&mutex_1);
+  // Return the item
+  return line;
+}
+
 void putBuff1(char *str) {
     pthread_mutex_lock(&mutex_1);
 
@@ -73,25 +90,65 @@ void putBuff1(char *str) {
     pthread_mutex_unlock(&mutex_1);
 }
 
+void putBuff2(char *str){
+  // Lock the mutex before putting the item in the buffer
+  pthread_mutex_lock(&mutex_2);
+  // Put the item in the buffer
+  strcpy(buffer_2[prod_idx_2], str);
+  // Increment the index where the next item will be put.
+  prod_idx_2 += 1;
+  count_2 += 1;
+  // Signal to the consumer that the buffer is no longer empty
+  pthread_cond_signal(&full_2);
+  // Unlock the mutex
+  pthread_mutex_unlock(&mutex_2);
+}
+
 //Testing purposes only
 void printBuff() {
-    for(int i = 0; i < count_1; i++) {
-        printf("%d: %s", i, buffer_1[i]);
+    for(int i = 0; i < count_2; i++) {
+        printf("%d: %s", i, buffer_2[i]);
     }
 }
 
 void *getInput(void *args) {
     char temp[1000] = {"\0"};
     while(fgets(temp, MAX_LENGTH, stdin) != NULL) {
+        putBuff1(temp);
         if(checkSTOP(temp))
             break;
-        putBuff1(temp);
     }
-    
+
     return NULL;
 }
 
+void replaceNewLine(char *cmd) {
+    char buffer[1000] = {"\0"};
+    char *p = cmd;
+    char *space = " ";
+    
+    while ((p = strstr(p, "\n"))) {
+        strncpy(buffer, cmd, p - cmd);
+        strcat(buffer, space);
+        strcat(buffer, p+strlen("\n"));
+        strcpy(cmd, buffer);
+        p++;
+    }
+  
+}
+
+
 void *filterNewLine(void *args) {
+    char *temp;
+    int i = 0;
+    while(1) {
+        temp = getBuff1();
+        if(checkSTOP(temp))
+            break;
+        replaceNewLine(temp);
+        putBuff2(temp);
+    }
+    printBuff();
     return NULL; 
 }
 

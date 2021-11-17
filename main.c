@@ -121,6 +121,20 @@ void putBuff2(char *str){
   pthread_mutex_unlock(&mutex_2);
 }
 
+void putBuff3(char *str){
+  // Lock the mutex before putting the item in the buffer
+  pthread_mutex_lock(&mutex_3);
+  // Put the item in the buffer
+  strcpy(buffer_3[prod_idx_3], str);
+  // Increment the index where the next item will be put.
+  prod_idx_3 += 1;
+  count_3 += 1;
+  // Signal to the consumer that the buffer is no longer empty
+  pthread_cond_signal(&full_3);
+  // Unlock the mutex
+  pthread_mutex_unlock(&mutex_3);
+}
+
 //Testing purposes only
 void printBuff() {
     for(int i = 0; i < count_3; i++) {
@@ -190,14 +204,13 @@ void *filterPlus(void *args) {
     while(1) {
         temp = getBuff2();
         if(checkSTOP(temp)){
-            //putBuff3(temp);
+            putBuff3(temp);
             break;
         }
         replacePlus(temp);
-        printf("%s", temp);
-        //putBuff3(temp);
+        putBuff3(temp);
     }
-    //printBuff();
+    printBuff();
     return NULL;
 }
 

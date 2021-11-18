@@ -121,6 +121,23 @@ void putBuff2(char *str){
   pthread_mutex_unlock(&mutex_2);
 }
 
+char *getBuff3(){
+  // Lock the mutex before checking if the buffer has data
+  pthread_mutex_lock(&mutex_3);
+  while (count_3 == 0)
+    // Buffer is empty. Wait for the producer to signal that the buffer has data
+    pthread_cond_wait(&full_3, &mutex_3);
+  char *line = calloc(strlen(buffer_3[con_idx_3]), sizeof(char));
+  strcpy(line, buffer_3[con_idx_3]);
+  // Increment the index from which the item will be picked up
+  con_idx_3 += 1;
+  count_3 -= 1;
+  // Unlock the mutex
+  pthread_mutex_unlock(&mutex_3);
+  // Return the item
+  return line;
+}
+
 void putBuff3(char *str){
   // Lock the mutex before putting the item in the buffer
   pthread_mutex_lock(&mutex_3);
@@ -160,6 +177,7 @@ void replaceNewLine(char *cmd) {
     
     while ((p = strstr(p, "\n"))) {
         strncpy(buffer, cmd, p - cmd);
+        buffer[p - cmd] = '\0';
         strcat(buffer, space);
         strcat(buffer, p+strlen("\n"));
         strcpy(cmd, buffer);
@@ -210,14 +228,38 @@ void *filterPlus(void *args) {
         replacePlus(temp);
         putBuff3(temp);
     }
-    printBuff();
+
     return NULL;
+}
+
+void insertPrintArr(char *text, char *arr, int *currIndex) {
+  int textLen = strlen(text);
+  
+  for(int i = 0; i < textLen; i++) {
+    arr[*currIndex] = text[i];
+    *currIndex += 1;
+    
+    if(*currIndex > 79){
+      printf("%s", arr);
+      *currIndex = 0;
+    }
+    
+  }
 }
 
 void *writeOutput(void *args) {
+    //Array used for printing
+    char printArr[80] = {"\0"};
+    int index = 0;
+    char *text;
+    while(1) {
+        text = getBuff3();
+        if(checkSTOP(text))
+            break;
+        insertPrintArr(text, printArr, &index);
+    }
     return NULL;
 }
-
 
 
 int main()

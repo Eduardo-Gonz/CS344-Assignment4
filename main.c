@@ -9,8 +9,6 @@
 
 #define MAX_LENGTH 1000
 
-int quit = 0;
-
 /* This code came from the example program from class */
 // Buffer 1, shared resource between input thread and newLine thread
 char buffer_1[MAX_SIZE][MAX_LENGTH];
@@ -51,6 +49,12 @@ pthread_mutex_t mutex_3 = PTHREAD_MUTEX_INITIALIZER;
 // Initialize the condition variable for buffer 3
 pthread_cond_t full_3 = PTHREAD_COND_INITIALIZER;
 
+/*
+ * Function: checkStop()
+ * --------------------
+ * Checks if a line has the text 'STOP'
+ *
+ */
 int checkSTOP(char *str) {
     if(strcmp(str, "STOP\n") == 0) {
         quit = 1;
@@ -59,6 +63,12 @@ int checkSTOP(char *str) {
     return 0;
 }
 
+/*
+ * Function: getBuff1()
+ * --------------------
+ * Grabs an item from the buffer shared by thread 1 & 2.
+ *
+ */
 char *getBuff1(){
   // Lock the mutex before checking if the buffer has data
   pthread_mutex_lock(&mutex_1);
@@ -76,6 +86,12 @@ char *getBuff1(){
   return line;
 }
 
+/*
+ * Function: putBuff1()
+ * --------------------
+ * Places an item from the buffer shared by thread 1 & 2.
+ *
+ */
 void putBuff1(char *str) {
     pthread_mutex_lock(&mutex_1);
 
@@ -90,6 +106,12 @@ void putBuff1(char *str) {
     pthread_mutex_unlock(&mutex_1);
 }
 
+/*
+ * Function: getBuff2()
+ * --------------------
+ * Grabs an item from the buffer shared by thread 2 & 3.
+ *
+ */
 char *getBuff2(){
   // Lock the mutex before checking if the buffer has data
   pthread_mutex_lock(&mutex_2);
@@ -107,6 +129,12 @@ char *getBuff2(){
   return line;
 }
 
+/*
+ * Function: putBuff2()
+ * --------------------
+ * Places an item from the buffer shared by thread 2 & 3.
+ *
+ */
 void putBuff2(char *str){
   // Lock the mutex before putting the item in the buffer
   pthread_mutex_lock(&mutex_2);
@@ -121,6 +149,12 @@ void putBuff2(char *str){
   pthread_mutex_unlock(&mutex_2);
 }
 
+/*
+ * Function: getBuff3()
+ * --------------------
+ * Grabs an item from the buffer shared by thread 3 & 4.
+ *
+ */
 char *getBuff3(){
   // Lock the mutex before checking if the buffer has data
   pthread_mutex_lock(&mutex_3);
@@ -138,6 +172,12 @@ char *getBuff3(){
   return line;
 }
 
+/*
+ * Function: putBuff3()
+ * --------------------
+ * Places an item from the buffer shared by thread 3 & 4.
+ *
+ */
 void putBuff3(char *str){
   // Lock the mutex before putting the item in the buffer
   pthread_mutex_lock(&mutex_3);
@@ -152,13 +192,12 @@ void putBuff3(char *str){
   pthread_mutex_unlock(&mutex_3);
 }
 
-//Testing purposes only
-void printBuff() {
-    for(int i = 0; i < count_3; i++) {
-        printf("%d: %s", i, buffer_3[i]);
-    }
-}
-
+/*
+ * Function: getInput()
+ * --------------------
+ * Reads input from stdin
+ *
+ */
 void *getInput(void *args) {
     char temp[1000] = {"\0"};
     while(fgets(temp, MAX_LENGTH, stdin) != NULL) {
@@ -170,6 +209,12 @@ void *getInput(void *args) {
     return NULL;
 }
 
+/*
+ * Function: replaceNewLine()
+ * --------------------
+ * Replaces every '\n' in a string of text with a space.
+ *
+ */
 void replaceNewLine(char *cmd) {
     char buffer[1000] = {"\0"};
     char *p = cmd;
@@ -186,6 +231,12 @@ void replaceNewLine(char *cmd) {
   
 }
 
+/*
+ * Function: replacePlus()
+ * --------------------
+ * Replaces every '++' in a string of text with "^"
+ *
+ */
 void replacePlus(char *cmd) {
     char buffer[1000] = {"\0"};
     char *p = cmd;
@@ -202,7 +253,12 @@ void replacePlus(char *cmd) {
   
 }
 
-
+/*
+ * Function: filterNewLine()
+ * --------------------
+ * Grabs items from the first buffer and replaces the new line characters.
+ *
+ */
 void *filterNewLine(void *args) {
     char *temp;
     while(1) {
@@ -217,6 +273,12 @@ void *filterNewLine(void *args) {
     return NULL; 
 }
 
+/*
+ * Function: filterNewLine()
+ * --------------------
+ * Grabs items from the second buffer and replaces every instance of "++".
+ *
+ */
 void *filterPlus(void *args) {
     char *temp;
     while(1) {
@@ -232,6 +294,12 @@ void *filterPlus(void *args) {
     return NULL;
 }
 
+/*
+ * Function: insertPrintArr()
+ * --------------------
+ * Inserts string into an array that holds 80 characters. Once that array is filled it is printed.
+ *
+ */
 void insertPrintArr(char *text, char *arr, int *currIndex) {
   int textLen = strlen(text);
   
@@ -247,6 +315,12 @@ void insertPrintArr(char *text, char *arr, int *currIndex) {
   }
 }
 
+/*
+ * Function: writeOutput()
+ * --------------------
+ * Grabs items from the 3rd buffer and prints only 80 characters.
+ *
+ */
 void *writeOutput(void *args) {
     //Array used for printing
     char printArr[80] = {"\0"};

@@ -57,7 +57,6 @@ pthread_cond_t full_3 = PTHREAD_COND_INITIALIZER;
  */
 int checkSTOP(char *str) {
     if(strcmp(str, "STOP\n") == 0) {
-        quit = 1;
         return 1;
     }
     return 0;
